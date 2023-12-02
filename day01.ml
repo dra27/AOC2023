@@ -27,10 +27,17 @@ let code s =
   int_of_string (Printf.sprintf "%c%c" (String.find s is_digit)
                                        (String.rfind s is_digit))
 
-let solution =
-  In_channel.with_open_text "input-01" @@ fun ic ->
-    In_channel.input_lines ic
-    |> List.fold_left (fun a l -> a + code l) 0
+let test_input_part1 = ["1abc2"; "pqr3stu8vwx"; "a1b2c3d4e5f"; "treb7uchet"]
+
+let input =
+  In_channel.with_open_text "input-01" In_channel.input_lines
+
+let test_part1 =
+  List.fold_left (fun a l -> a + code l) 0 test_input_part1
+
+let solution_part1 =
+  List.fold_left (fun a l -> a + code l) 0 input
 
 let () =
-  Printf.printf "Day 1; Puzzle 1 = %d\n%!" solution
+  Printf.printf "Day 1; Puzzle 1; test = %d\n%!" test_part1;
+  Printf.printf "Day 1; Puzzle 1 = %d\n%!" solution_part1
