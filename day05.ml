@@ -144,6 +144,6 @@ let solution_part2 = solution part2
 let () =
   Printf.printf "Day 5; Puzzle 1; test = %d\n\
                  Day 5; Puzzle 1 = %d\n\
-                 Day 5; Puzzle 1; test = %d\n\
+                 Day 5; Puzzle 2; test = %d\n\
                  Day 5; Puzzle 2 = %d\n" test_part1 solution_part1
                                          test_part2 solution_part2
