@@ -90,9 +90,9 @@ let solution_part2 = solution ~jokers:true
 
 let () =
   Printf.printf
-    "Day 5; Puzzle 1; test = %d\n\
-     Day 5; Puzzle 1 = %d\n\
-     Day 5; Puzzle 2; test = %d\n\
-     Day 5: Puzzle 2; test (dra27) = %d\n\
-     Day 5; Puzzle 2 = %d\n" test_part1 solution_part1
+    "Day 7; Puzzle 1; test = %d\n\
+     Day 7; Puzzle 1 = %d\n\
+     Day 7; Puzzle 2; test = %d\n\
+     Day 7: Puzzle 2; test (dra27) = %d\n\
+     Day 7; Puzzle 2 = %d\n" test_part1 solution_part1
                              test_part2 test_part2_dra27 solution_part2
