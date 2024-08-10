@@ -87,28 +87,13 @@ let test2_part1, _, _ =
   walk part1_exit (route "LLR") (part1_start (load_map test2))
 
 let map, plan =
-In_channel.with_open_text "input-08" @@ fun ic ->
-  let plan = route (input_line ic) in
-  let _ = input_line ic in
-  load_map (In_channel.input_lines ic), plan
+  In_channel.with_open_text "input-08" @@ fun ic ->
+    let plan = route (input_line ic) in
+    let _ = input_line ic in
+    load_map (In_channel.input_lines ic), plan
 
 let solution_part1, _, _ =
   walk part1_exit plan (part1_start map)
-
-let counts =
-  let starts =
-    let is_start elt = (elt.key.[2] = 'A') in
-    let f _ elt acc = if is_start elt then elt::acc else acc in
-    StringMap.fold f map [] in
-  let first_ends = List.map (walk part2_exit plan) starts in
-  List.map (fun (count, finish, route) ->
-    (* Check that the solution is "simple" *)
-    let count2, finish2, route2 = walk part2_exit plan finish in
-    assert (route = [] && route2 = [] && finish == finish2 && count = count2);
-    count) first_ends
-
-(* At this point, the puzzle appears to have been set such that all the the
-   counts have two prime factors and all the answers have a factor in common *)
 
 let rec gcd a b =
   if b = 0 then
@@ -116,13 +101,20 @@ let rec gcd a b =
   else
     gcd b (a mod b)
 
+let lcm a b =
+  (a * b) / gcd a b
+
 let solution_part2 =
-  let gcd =
-    match counts with
-    | count1::count2::_ ->
-      gcd count1 count2
-    | _ -> assert false in
-  List.fold_left (fun acc count -> acc * (count / gcd) ) gcd counts
+  let starts =
+    let is_start elt = (elt.key.[2] = 'A') in
+    let f _ elt acc = if is_start elt then elt::acc else acc in
+    StringMap.fold f map [] in
+  let first_ends = List.map (walk part2_exit plan) starts in
+  List.fold_left (fun acc (count, finish, route) ->
+    (* Check that the solution is "simple" *)
+    let count2, finish2, route2 = walk part2_exit plan finish in
+    assert (route = [] && route2 = [] && finish == finish2 && count = count2);
+    lcm acc count) 1 first_ends
 
 let () =
   Printf.printf "Day 8; Puzzle 1; test1 = %d\n\
