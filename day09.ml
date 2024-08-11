@@ -37,18 +37,29 @@ let test = [
   [10; 13; 16; 21; 30; 45];
 ]
 
+let gather acc row = acc + sweep row
 let test_part1 =
-  List.fold_left (fun acc row -> acc + sweep row) 0 test
+  List.fold_left gather 0 test
 
 let parse line =
   List.map int_of_string (String.split_on_char ' ' line)
 
+let readings =
+  In_channel.with_open_text "input-09" @@ fun ic ->
+    List.map parse (In_channel.input_lines ic)
+
 let solution_part1 =
-In_channel.with_open_text "input-09" @@ fun ic ->
-  In_channel.input_lines ic
-  |> List.map parse
-  |> List.fold_left (fun acc row -> acc + sweep row) 0
+  List.fold_left gather 0 readings
+
+let test_part2 =
+  List.fold_left gather 0 (List.map List.rev test)
+
+let solution_part2 =
+  List.fold_left gather 0 (List.map List.rev readings)
 
 let () =
   Printf.printf "Day 9; Puzzle 1; test = %d\n\
-                 Day 9; Puzzle 1 = %d\n" test_part1 solution_part1
+                 Day 9; Puzzle 1 = %d\n\
+                 Day 9; Puzzle 2; test = %d\n\
+                 Day 9; Puzzle 2 = %d\n" test_part1 solution_part1
+                                         test_part2 solution_part2
