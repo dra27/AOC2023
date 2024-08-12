@@ -124,6 +124,56 @@ SJLL7
 LJ.LJ
 |}))
 
+let enclosed1 = parse_field (String.split_on_char '\n' (String.trim {|
+...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........
+|}))
+
+let enclosed2 = parse_field (String.split_on_char '\n' (String.trim {|
+..........
+.S------7.
+.|F----7|.
+.||OOOO||.
+.||OOOO||.
+.|L-7F-J|.
+.|II||II|.
+.L--JL--J.
+..........
+|}))
+
+let larger_enclosed = parse_field (String.split_on_char '\n' (String.trim {|
+.F----7F7F7F7F-7....
+.|F--7||||||||FJ....
+.||.FJ||||||||L7....
+FJL7L7LJLJ||LJ.L-7..
+L--J.L7...LJS7F-7L7.
+....F-J..F7FJ|L7L7L7
+....L7.F7||L7|.L7L7|
+.....|FJLJ|FJ|F7|.LJ
+....FJL-7.||.||||...
+....L---J.LJ.LJLJ...
+|}))
+
+let junk_enclosed = parse_field (String.split_on_char '\n' (String.trim {|
+FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L
+|}))
+
 let get_start {field; start = (row, column) as start} =
   let first, second =
     match field.(row).[column] with
@@ -173,9 +223,123 @@ let field =
     parse_field (In_channel.input_lines ic)
 let solution_part1, field = walk field
 
+let flood ({field; loop} as source) =
+  let columns = String.length field.(0) * 2 in
+  (* More memory-dense representations are available... *)
+  let marked =
+    Array.init (Array.length field * 2) (fun _ -> Array.make columns false) in
+  let augment row column acc =
+    let c =
+      if CoordSet.mem (row lsr 1, column lsr 1) loop then
+        field.(row lsr 1).[column lsr 1]
+      else
+        '.' in
+    (* Add west *)
+    let acc =
+      if column = 0 then
+        acc
+      else
+        match c, row mod 2, column mod 2 with
+        | '|', _, 1
+        | ('J' | 'L'), 0, 1
+        | ('F' | '7'), 1, 1 -> acc
+        | _ ->
+            (row, column - 1)::acc in
+    (* Add east *)
+    let acc =
+      if column = columns - 1 then
+        acc
+      else
+        match c, row mod 2, column mod 2 with
+        | '|', _, 0
+        | ('J' | 'L'), 0, 0
+        | ('F' | '7'), 1, 0 -> acc
+        | _ ->
+            (row, column + 1)::acc in
+    (* Add north *)
+    let acc =
+      if row = 0 then
+        acc
+      else
+        match c, row mod 2, column mod 2 with
+        | '-', 1, _
+        | ('J' | '7'), 1, 0
+        | ('L' | 'F'), 1, 1 -> acc
+        | _ ->
+            (row - 1, column)::acc in
+    (* Add south *)
+    if row = Array.length field * 2 - 1 then
+      acc
+    else
+      match c, row mod 2, column mod 2 with
+      | '-', 0, _
+      | ('J' | '7'), 0, 0
+      | ('L' | 'F'), 0, 1 -> acc
+      | _ ->
+          (row + 1, column)::acc in
+  let rec flood acc =
+    match acc with
+    | (row, column)::acc ->
+        if not marked.(row).(column) then begin
+          marked.(row).(column) <- true;
+          flood (augment row column acc)
+        end else
+          flood acc
+    | [] ->
+      let paint row =
+        let paint column =
+          if CoordSet.mem (row, column) loop then
+            field.(row).[column]
+          else if marked.(row * 2).(column * 2) then begin
+            assert (marked.(row * 2 + 1).(column * 2) &&
+                    marked.(row * 2 + 1).(column * 2 + 1) &&
+                    marked.(row * 2).(column * 2 + 1));
+            'O'
+          end else
+            'I'
+        in
+        String.init (String.length field.(0)) paint in
+      {source with field = Array.init (Array.length field) paint}
+  in
+  (* Sub-dividing the tiles means the outer most "ring" is always empty *)
+  flood [(0, 0)]
+
+let count_tiles target {field} =
+  let count_row acc row =
+    let count_column acc c = if c = target then succ acc else acc in
+    String.fold_left count_column acc row in
+  Array.fold_left count_row 0 field
+
+let square = flood square
+let complex = flood complex
+let test1_part2 = count_tiles 'I' square
+let test2_part2 = count_tiles 'I' complex
+
+let part2 unwalked_field =
+  let _, field = walk unwalked_field in
+  let field = flood field in
+  count_tiles 'I' field, field
+
+let test_enclosed1, enclosed1 = part2 enclosed1
+let test_enclosed2, enclosed2 = part2 enclosed2
+let test_larger_enclosed, larger_enclosed = part2 larger_enclosed
+let test_junk_enclosed, junk_enclosed = part2 junk_enclosed
+let field = flood field
+let solution_part2 = count_tiles 'I' field
 
 let () =
   Printf.printf "Day 10; Puzzle 1; test1 = %d\n\
                  Day 10; Puzzle 1; test2 = %d\n\
-                 Day 10; Puzzle 1 = %d\n" test1_part1 test2_part1
-                                          solution_part1
+                 Day 10; Puzzle 1 = %d\n\
+                 Day 10; Puzzle 2; test0a = %d\n\
+                 Day 10; Puzzle 2; test0b = %d\n\
+                 Day 10; Puzzle 2; test1 = %d\n\
+                 Day 10; Puzzle 2; test2 = %d\n\
+                 Day 10; Puzzle 2; test3 = %d\n\
+                 Day 10; Puzzle 2; test4 = %d\n\
+                 Day 10; Puzzle 2 = %d\n"
+                 test1_part1 test2_part1 solution_part1
+                 test1_part2 test2_part2
+                 test_enclosed1 test_enclosed2
+                 test_larger_enclosed test_junk_enclosed
+                 solution_part2
