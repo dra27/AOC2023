@@ -92,33 +92,6 @@ let all_pairs xs =
   | x::_ -> all_pairs xs x []
   | [] -> []
 
-(* Adapted from "A Rasterizing Algorithm for Drawing Curves" Alois Zingl *)
-let shortest_path (x1, y1) (x2, y2) =
-  let dx = abs (x2 - x1) in
-  let sx = if x1 < x2 then 1 else -1 in
-  let dy = -abs (y2 - y1) in
-  let sy = if y1 < y2 then 1 else -1 in
-  let[@tail_mod_cons] rec loop last_x last_y err x y =
-    if last_x = x2 && last_y = y2 then
-      []
-    else
-      let e2 = 2 * err in
-      let err, x' =
-        if e2 >= dy then
-          err + dy, x + sx
-        else
-          err, x in
-      let err, y' =
-        if e2 <= dx then
-          err + dx, y + sy
-        else
-          err, y in
-      if x = last_x || y = last_y then
-        (x, y)::(loop x y err x' y')
-      else
-        (x, last_y)::(x, y)::(loop x y err x' y') in
-  loop x1 y1 (dx + dy) x1 y1
-
 let find_galaxies universe =
   let find_in_row (acc, y) row =
     let find_in_column (acc, x) c =
@@ -131,9 +104,8 @@ let find_galaxies universe =
   fst (List.fold_left find_in_row ([], 0) universe)
 
 let part1 universe =
-  let f acc ((x1, y1 as galaxy1), (x2, y2 as galaxy2)) =
-    let path = shortest_path galaxy1 galaxy2 in
-    List.length path - 1 + acc in
+  let f acc ((x1, y1), (x2, y2)) =
+    abs (x2 - x1) + abs (y2 - y1) + acc in
   List.fold_left f 0 (all_pairs (find_galaxies (expand universe)))
 
 let () =
