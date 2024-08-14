@@ -8,7 +8,7 @@ module String = struct
     done;
     !r
 
-  let fold_lefti_map f x a =
+  let foldi_left_map f x a =
     let r = ref x in
     let l = length a in
     let b = Bytes.create l in
@@ -28,7 +28,7 @@ let parse lines =
           ((row, i)::galaxies, c)
         else
           (galaxies, mask.[i]) in
-      String.fold_lefti_map f galaxies line in
+      String.foldi_left_map f galaxies line in
     let empty_rows =
       if galaxies == galaxies' then row::empty_rows else empty_rows in
     (galaxies', empty_rows, succ row, mask) in
